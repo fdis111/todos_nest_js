@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { TodoDTO } from './data_transformers_objects/todo.dto';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { CreateTodoDTO } from './data_transformers_objects/create_todo.dto';
 import { Todo } from './interfaces/todo.interface';
 
 @Injectable()
@@ -23,7 +23,7 @@ export class TodosService {
         return this.todo;
     }
 
-    create(todo: TodoDTO){
+    create(todo: CreateTodoDTO){
         const newTodo: Todo = {
             id: Date.now(),
             title: todo.title,
@@ -31,5 +31,13 @@ export class TodosService {
             description: todo.description,
         }
         this.todo = [...this.todo, newTodo];
+    }
+
+    findById(id: number): Todo{
+        const result = this.todo.find(todo => todo.id === id);
+        if(result){
+            return result;
+        }
+        throw new HttpException(`To do with id : ${id} not exists`, HttpStatus.NOT_FOUND);
     }
 }

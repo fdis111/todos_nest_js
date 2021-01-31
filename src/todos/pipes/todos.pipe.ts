@@ -1,8 +1,10 @@
 import { PipeTransform, Injectable, ArgumentMetadata, HttpException, HttpStatus } from '@nestjs/common';
-import { validate, ValidationError} from 'class-validator';
+import { validate, ValidationError } from 'class-validator';
 import { plainToClass } from 'class-transformer';
+
+
 @Injectable()
-export class TodosPipe implements PipeTransform{
+export class TodosPipe implements PipeTransform {
 
    async transform(value: any, metadata: ArgumentMetadata){
         if (this.isEmpty(value)) throw new HttpException('Validation failed: No payload provided', HttpStatus.BAD_REQUEST);
