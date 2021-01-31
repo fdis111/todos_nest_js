@@ -51,4 +51,10 @@ export class TodosService {
         }
         throw new NotFoundException(`Todo with id ${id} do not exists`);
     }
+
+    delete(id: number){
+        const rowToDelete = this.todos.find(_todo => _todo.id === id)
+        this.todos = this.todos.filter(todo => todo.id !== id);
+        return {deletedRow : rowToDelete}
+    }
 }
