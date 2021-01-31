@@ -1,6 +1,7 @@
 import { IsNotEmpty, IsBoolean, IsString, IsDefined } from 'class-validator';
 
 export class CreateTodoDTO{
+
     @IsDefined()
     @IsNotEmpty()
     @IsString()
@@ -10,8 +11,5 @@ export class CreateTodoDTO{
     @IsBoolean()
     done: boolean;
 
-    @IsDefined()
-    @IsNotEmpty()
-    @IsString()
     description?: string;
 }

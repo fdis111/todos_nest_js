@@ -1,10 +1,10 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { CreateTodoDTO } from './data_transformers_objects/create_todo.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreateTodoDTO } from './data_transfer_objects/create_todo.dto';
 import { Todo } from './interfaces/todo.interface';
 
 @Injectable()
 export class TodosService {
-    todo: Todo[] = [
+    todos: Todo[] = [
         {
             id: 1,
             title: "learn to code",
@@ -20,7 +20,7 @@ export class TodosService {
     ]
 
     findAll(): Todo[] {
-        return this.todo;
+        return this.todos;
     }
 
     create(todo: CreateTodoDTO){
@@ -30,14 +30,25 @@ export class TodosService {
             done: todo.done,
             description: todo.description,
         }
-        this.todo = [...this.todo, newTodo];
+        this.todos = [...this.todos, newTodo];
     }
 
     findById(id: number): Todo{
-        const result = this.todo.find(todo => todo.id === id);
+        const result = this.todos.find(todo => todo.id === id);
         if(result){
             return result;
         }
-        throw new HttpException(`To do with id : ${id} not exists`, HttpStatus.NOT_FOUND);
+        throw new NotFoundException(`To do with id : ${id} not exists`);
+    }
+
+    update(todo: CreateTodoDTO, id: number): Todo{
+        const todoIndex = this.todos.findIndex(_todo => _todo.id === id);
+        if (todoIndex >= 0) {
+            this.todos[todoIndex].title = todo.title;
+            this.todos[todoIndex].description = todo.description;
+            this.todos[todoIndex].done = todo.done;
+            return this.todos[todoIndex];
+        }
+        throw new NotFoundException(`Todo with id ${id} do not exists`);
     }
 }
