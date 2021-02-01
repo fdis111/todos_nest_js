@@ -1,10 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { CreateTodoDTO } from './data_transfer_objects/create_todo.dto';
-import { Todo } from './interfaces/todo.interface';
-
+import { ITodo } from './interfaces/todo.interface';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Todo, TodoDocument } from './schemas/todo.schema';
+import { Types, isValidObjectId } from 'mongoose';
+ 
 @Injectable()
 export class TodosService {
-    todos: Todo[] = [
+    todos: ITodo[] = [
         {
             id: 1,
             title: "learn to code",
@@ -19,42 +23,43 @@ export class TodosService {
         }
     ]
 
-    findAll(): Todo[] {
-        return this.todos;
+    constructor(@InjectModel(Todo.name) private TodoModel: Model<TodoDocument>){}
+
+    private convertStrToIdObj(id: string): Types.ObjectId{
+        if (isValidObjectId(id)) {
+            return Types.ObjectId(id)
+        }
+        throw new HttpException('the id passed as parameter is incorrect', HttpStatus.BAD_REQUEST);
     }
 
-    create(todo: CreateTodoDTO){
-        const newTodo: Todo = {
-            id: Date.now(),
+    findAll(): Promise<ITodo[]> {
+        return this.TodoModel.find().exec();
+    }
+
+    async create(todo: CreateTodoDTO){
+        const createdTodo = new this.TodoModel(todo);
+        createdTodo.save();
+    }
+
+    findById(id: string): Promise<ITodo>{
+        const _id = this.convertStrToIdObj(id);
+        return  this.TodoModel.findById({_id}).exec();
+    }
+
+    async update(todo: CreateTodoDTO, id: string){
+        const result = await this.TodoModel.updateOne({
+            _id : this.convertStrToIdObj(id)
+        },
+        {
             title: todo.title,
-            done: todo.done,
             description: todo.description,
-        }
-        this.todos = [...this.todos, newTodo];
+            done: todo.done,
+            updatedAt: new Date,
+        })
+        return result;
     }
 
-    findById(id: number): Todo{
-        const result = this.todos.find(todo => todo.id === id);
-        if(result){
-            return result;
-        }
-        throw new NotFoundException(`To do with id : ${id} not exists`);
-    }
-
-    update(todo: CreateTodoDTO, id: number): Todo{
-        const todoIndex = this.todos.findIndex(_todo => _todo.id === id);
-        if (todoIndex >= 0) {
-            this.todos[todoIndex].title = todo.title;
-            this.todos[todoIndex].description = todo.description;
-            this.todos[todoIndex].done = todo.done;
-            return this.todos[todoIndex];
-        }
-        throw new NotFoundException(`Todo with id ${id} do not exists`);
-    }
-
-    delete(id: number){
-        const rowToDelete = this.todos.find(_todo => _todo.id === id)
-        this.todos = this.todos.filter(todo => todo.id !== id);
-        return {deletedRow : rowToDelete}
+    delete(id: string){
+       return this.TodoModel.deleteOne({ _id: this.convertStrToIdObj(id)})
     }
 }
